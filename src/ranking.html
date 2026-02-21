@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#09090B">
+<title>NovaLink Ranking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#09090B!important;height:100%}
+body{background:#09090B!important;color:#EDEDEF;font-family:'Noto Sans JP',system-ui,sans-serif;min-height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-size:16px}
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:#09090B;padding-bottom:40px}
+.header{padding:calc(env(safe-area-inset-top,12px)+14px) 20px 12px;display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#C5963A,#DEB560);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:#0A0A0C}
+.logo-text{font-weight:700;font-size:15px;letter-spacing:-.01em}
+.back-btn{color:#C5963A;font-size:13px;font-weight:600;text-decoration:none}
+.title-area{padding:8px 20px 20px;text-align:center}
+.title-area h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.title-area h1 em{font-style:normal;background:linear-gradient(135deg,#C5963A,#DEB560);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.title-sub{font-size:12px;color:#6E6E7A}
+.my-rank{margin:0 20px 20px;background:linear-gradient(160deg,#1A1608,#12100A);border:1px solid rgba(197,150,58,.25);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:16px}
+.my-rank-num{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:#C5963A;min-width:60px;text-align:center}
+.my-rank-num span{font-size:14px;font-weight:500;color:#8A8A96}
+.my-rank-info{flex:1}
+.my-rank-label{font-size:11px;color:#6E6E7A;margin-bottom:4px}
+.my-rank-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#4ADE80}
+.my-rank-total{font-size:11px;color:#6E6E7A;margin-top:2px}
+.list-head{display:flex;padding:0 20px 8px;font-size:11px;color:#6E6E7A;font-weight:500}
+.list-head .lh-rank{width:48px;text-align:center}
+.list-head .lh-gain{flex:1;text-align:right;padding-right:4px}
+.row{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid #151518;transition:background .15s}
+.row:last-child{border-bottom:none}
+.row.me{background:rgba(197,150,58,.04);border-radius:12px;border-bottom-color:transparent;position:relative}
+.row.me::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:#C5963A;border-radius:0 3px 3px 0}
+.r-rank{width:48px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;color:#6E6E7A;flex-shrink:0}
+.row.me .r-rank{color:#C5963A}
+.r-rank.gold{color:#C5963A;font-size:17px}
+.r-rank.silver{color:#94A3B8}
+.r-rank.bronze{color:#D97706}
+.r-rank .rk-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:12px;font-weight:700}
+.r-rank.gold .rk-badge{background:linear-gradient(135deg,#C5963A,#DEB560);color:#0A0A0C}
+.r-rank.silver .rk-badge{background:linear-gradient(135deg,#64748B,#94A3B8);color:#0A0A0C}
+.r-rank.bronze .rk-badge{background:linear-gradient(135deg,#B45309,#D97706);color:#0A0A0C}
+.r-bar{flex:1;margin:0 14px}
+.r-bar-track{height:6px;background:#151518;border-radius:3px;overflow:hidden}
+.r-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#C5963A,#DEB560);transition:width .6s ease-out}
+.row.me .r-bar-fill{background:linear-gradient(90deg,#C5963A,#F5D98A)}
+.r-gain{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:#4ADE80;text-align:right;min-width:90px}
+.r-gain.neg{color:#F87171}
+.footer-note{text-align:center;padding:24px 20px 0;font-size:11px;color:#444}
+.loading{text-align:center;padding:60px 20px;color:#6E6E7A;font-size:14px}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.an{animation:up .4s ease-out both}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+  <div class="logo"><div class="logo-mark">NL</div><div class="logo-text">NovaLink</div></div>
+  <a class="back-btn" href="/">ポートフォリオ →</a>
+</div>
+<div class="title-area">
+  <h1><em>含み益</em>ランキング</h1>
+  <div class="title-sub">リアルタイム更新</div>
+</div>
+<div id="myRankCard"></div>
+<div class="list-head"><div class="lh-rank">順位</div><div style="flex:1"></div><div class="lh-gain">含み益</div></div>
+<div id="list"><div class="loading">読み込み中...</div></div>
+<div class="footer-note" id="footerNote"></div>
+</div>
+<script>
+var API=location.origin;
+function $(id){return document.getElementById(id)}
+function fY(n){var s=n<0?'-':'+';return s+'\u00a5'+Math.abs(Math.round(n)).toLocaleString('ja-JP')}
+function getUID(){var m=document.cookie.match(/nluid=([^;]+)/);return m?m[1]:null}
+async function load(){
+  var uid=getUID()||'';
+  var r=await(await fetch(API+'/api/ranking?uid='+uid)).json();
+  // My rank card
+  if(r.myRank){
+    var mr=r.myRank;
+    $('myRankCard').innerHTML='<div class="my-rank an"><div class="my-rank-num">'+mr.rank+'<span> / '+r.totalUsers+'</span></div><div class="my-rank-info"><div class="my-rank-label">あなたの含み益</div><div class="my-rank-val">'+fY(mr.gain)+'</div><div class="my-rank-total">\u8a55\u4fa1\u984d '+'\u00a5'+mr.totalValue.toLocaleString('ja-JP')+'</div></div></div>';
+  }
+  // List
+  var maxGain=Math.max(1,...r.ranking.map(function(x){return Math.max(x.gain,0)}));
+  var h='';
+  for(var i=0;i<r.ranking.length;i++){
+    var e=r.ranking[i];
+    var me=e.isMe?' me':'';
+    var rankCls='';
+    var medal='';
+    if(e.rank===1){rankCls=' gold';medal='<span class="rk-badge">1</span>'}
+    else if(e.rank===2){rankCls=' silver';medal='<span class="rk-badge">2</span>'}
+    else if(e.rank===3){rankCls=' bronze';medal='<span class="rk-badge">3</span>'}
+    var pct=maxGain>0?Math.max(0,Math.round(e.gain/maxGain*100)):0;
+    var neg=e.gain<0?' neg':'';
+    var delay=Math.min(i*0.03,0.5);
+    h+='<div class="row an'+me+'" style="animation-delay:'+delay+'s"><div class="r-rank'+rankCls+'">'+medal+(e.rank>3?e.rank:'')+'</div><div class="r-bar"><div class="r-bar-track"><div class="r-bar-fill" style="width:'+pct+'%"></div></div></div><div class="r-gain'+neg+'">'+fY(e.gain)+'</div></div>';
+  }
+  if(!r.ranking.length) h='<div class="loading">\u307e\u3060\u30e6\u30fc\u30b6\u30fc\u304c\u3044\u307e\u305b\u3093</div>';
+  $('list').innerHTML=h;
+  $('footerNote').textContent=r.totalUsers+'\u4eba\u304c\u53c2\u52a0\u4e2d \u00b7 60\u79d2\u3054\u3068\u306b\u66f4\u65b0';
+}
+load();setInterval(load,60000);
+</script>
+</body>
+</html>
