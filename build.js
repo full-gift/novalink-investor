@@ -8,6 +8,7 @@ const userHtml = fs.readFileSync(path.join(__dirname, 'src', 'user.html'), 'utf8
 const adminHtml = fs.readFileSync(path.join(__dirname, 'src', 'admin.html'), 'utf8');
 const rankingHtml = fs.readFileSync(path.join(__dirname, 'src', 'ranking.html'), 'utf8');
 const depositHtml = fs.readFileSync(path.join(__dirname, 'src', 'deposit.html'), 'utf8');
+const commentsHtml = fs.readFileSync(path.join(__dirname, 'src', 'comments.html'), 'utf8');
 const workerSrc = fs.readFileSync(path.join(__dirname, 'src', 'worker.js'), 'utf8');
 
 function escapeForJs(str) {
@@ -18,7 +19,8 @@ let output = workerSrc
   .replace('"__USER_HTML__"', '"' + escapeForJs(userHtml) + '"')
   .replace('"__ADMIN_HTML__"', '"' + escapeForJs(adminHtml) + '"')
   .replace('"__RANKING_HTML__"', '"' + escapeForJs(rankingHtml) + '"')
-  .replace('"__DEPOSIT_HTML__"', '"' + escapeForJs(depositHtml) + '"');
+  .replace('"__DEPOSIT_HTML__"', '"' + escapeForJs(depositHtml) + '"')
+  .replace('"__COMMENTS_HTML__"', '"' + escapeForJs(commentsHtml) + '"');
 
 fs.writeFileSync(path.join(distDir, 'worker.js'), output);
 console.log('Built dist/worker.js (' + Math.round(output.length / 1024) + ' KB)');
