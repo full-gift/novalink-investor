@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#09090B">
+<title>NovaLink — 入金</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#09090B!important;height:100%}
+body{background:#09090B!important;color:#EDEDEF;font-family:'Noto Sans JP',system-ui,sans-serif;min-height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.5}
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:#09090B;padding-bottom:40px}
+.header{padding:calc(env(safe-area-inset-top,12px)+12px) 20px 10px;display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#C5963A,#DEB560);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#0A0A0C;letter-spacing:-.5px}
+.logo-text{font-weight:700;font-size:17px;letter-spacing:-.02em}
+.back-link{color:#C5963A;font-size:13px;font-weight:600;text-decoration:none}
+
+.title-area{padding:20px 20px 8px}
+.title-area h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px}
+.title-area h1 em{font-style:normal;background:linear-gradient(135deg,#C5963A,#DEB560);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.title-sub{font-size:12px;color:#6E6E7A;line-height:1.6}
+
+/* Tabs */
+.tabs{display:flex;gap:0;margin:20px 20px 0;background:#111110;border-radius:12px;padding:3px;border:1px solid #1E1D18}
+.tab{flex:1;height:42px;display:flex;align-items:center;justify-content:center;gap:8px;border:none;background:none;color:#6E6E7A;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;transition:all .2s;-webkit-appearance:none}
+.tab.on{background:#1A1908;color:#EDEDEF;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tab-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.tab-icon.btc{background:#F7931A;color:#fff}
+.tab-icon.eth{background:#627EEA;color:#fff}
+
+/* Panels */
+.panel{display:none;margin:20px 20px 0}.panel.on{display:block}
+
+/* Address card */
+.addr-card{background:#111110;border:1px solid #1E1D18;border-radius:16px;padding:20px;margin-bottom:14px}
+.addr-label{font-size:11px;font-weight:600;color:#6E6E7A;letter-spacing:.04em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.addr-label .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.addr-label .dot.btc{background:#F7931A}
+.addr-label .dot.eth{background:#627EEA}
+.addr-box{background:#0A0A08;border:1px solid #1E1D18;border-radius:10px;padding:14px;position:relative;display:flex;align-items:center;gap:10px}
+.addr-text{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:500;color:#EDEDEF;word-break:break-all;line-height:1.6;flex:1;user-select:all;-webkit-user-select:all}
+.copy-btn{flex-shrink:0;width:40px;height:40px;border:1px solid #2A2518;border-radius:10px;background:#111110;color:#C5963A;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;-webkit-appearance:none}
+.copy-btn:active{background:#1A1908;transform:scale(.95)}
+.copy-btn svg{width:18px;height:18px}
+.copy-btn.ok{background:#1A2E1A;border-color:#2D4A2D;color:#4ADE80}
+
+/* Network info */
+.net-info{display:flex;gap:8px;margin-top:12px}
+.net-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;background:#1A1908;border:1px solid #2A2518;color:#C5963A}
+
+/* Caution */
+.caution{background:rgba(251,191,36,.03);border:1px solid rgba(251,191,36,.1);border-radius:14px;padding:16px 18px;margin-top:20px}
+.caution-title{font-size:13px;font-weight:700;color:#FBBF24;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.caution-title svg{width:16px;height:16px;flex-shrink:0}
+.caution-list{list-style:none;padding:0}
+.caution-list li{font-size:12px;color:#9A9A8A;line-height:1.7;padding-left:14px;position:relative;margin-bottom:4px}
+.caution-list li::before{content:'';position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%;background:#6E6E7A}
+
+/* Steps */
+.steps{margin-top:20px}
+.step{display:flex;gap:14px;margin-bottom:16px}
+.step-num{width:26px;height:26px;border-radius:50%;background:#1A1908;border:1px solid #2A2518;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#C5963A;flex-shrink:0;margin-top:1px}
+.step-text{font-size:13px;color:#9A9A8A;line-height:1.7}
+.step-text strong{color:#EDEDEF;font-weight:600}
+
+/* Toast */
+.toast{position:fixed;top:calc(env(safe-area-inset-top,12px)+16px);left:50%;transform:translateX(-50%) translateY(-100px);background:#1A2E1A;color:#4ADE80;border:1px solid #2D4A2D;font-size:14px;font-weight:600;padding:12px 24px;border-radius:14px;z-index:300;transition:transform .4s cubic-bezier(.32,.72,0,1);white-space:nowrap;max-width:88%;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.an{animation:up .5s ease-out both}
+.a1{animation-delay:.04s}.a2{animation-delay:.08s}.a3{animation-delay:.12s}.a4{animation-delay:.16s}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="toast" id="toast"></div>
+
+<div class="header an a1">
+  <div class="logo"><div class="logo-mark">NL</div><div class="logo-text">NovaLink</div></div>
+  <a class="back-link" href="/">ポートフォリオ →</a>
+</div>
+
+<div class="title-area an a2">
+  <h1><em>入金</em></h1>
+  <div class="title-sub">以下のアドレスに仮想通貨を送金してください。着金確認後、管理者が注文を承認します。</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs an a3">
+  <button class="tab on" data-coin="btc" id="tabBtc">
+    <span class="tab-icon btc">₿</span>Bitcoin
+  </button>
+  <button class="tab" data-coin="eth" id="tabEth">
+    <span class="tab-icon eth">Ξ</span>Ethereum
+  </button>
+</div>
+
+<!-- BTC Panel -->
+<div class="panel on" id="panel-btc">
+  <div class="addr-card an a4">
+    <div class="addr-label"><span class="dot btc"></span>BTC 入金アドレス</div>
+    <div class="addr-box">
+      <div class="addr-text" id="addrBtc">bc1qyat8n2mnr0xcxsc5vs7j3xu0456t78p2qsz7g7</div>
+      <button class="copy-btn" id="copyBtc" aria-label="コピー">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      </button>
+    </div>
+    <div class="net-info">
+      <span class="net-tag">Bitcoin ネットワーク</span>
+      <span class="net-tag">SegWit (bech32)</span>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-text"><strong>上記アドレスをコピー</strong>して、お使いのウォレットアプリに貼り付けてください。</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text"><strong>送金額は注文金額と同等</strong>のBTCを送金してください。</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">着金確認後、管理者がポートフォリオ画面の<strong>追加注文を承認</strong>します。</div></div>
+  </div>
+
+  <div class="caution">
+    <div class="caution-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      注意事項
+    </div>
+    <ul class="caution-list">
+      <li>必ず <strong>Bitcoinネットワーク</strong> で送金してください。他チェーンからの送金は反映されません。</li>
+      <li>最小送金額: <strong>0.0001 BTC</strong></li>
+      <li>着金確認には <strong>1〜3承認（約10〜30分）</strong> かかります。</li>
+      <li>送金先アドレスを必ずご確認ください。誤送金は復元できません。</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ETH Panel -->
+<div class="panel" id="panel-eth">
+  <div class="addr-card an a4">
+    <div class="addr-label"><span class="dot eth"></span>ETH 入金アドレス</div>
+    <div class="addr-box">
+      <div class="addr-text" id="addrEth">0x497C6B6481954B5d04ebA99D79482b31a3cA7bc9</div>
+      <button class="copy-btn" id="copyEth" aria-label="コピー">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      </button>
+    </div>
+    <div class="net-info">
+      <span class="net-tag">Ethereum メインネット</span>
+      <span class="net-tag">ERC-20</span>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-text"><strong>上記アドレスをコピー</strong>して、お使いのウォレットアプリに貼り付けてください。</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text"><strong>送金額は注文金額と同等</strong>のETHを送金してください。</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">着金確認後、管理者がポートフォリオ画面の<strong>追加注文を承認</strong>します。</div></div>
+  </div>
+
+  <div class="caution">
+    <div class="caution-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      注意事項
+    </div>
+    <ul class="caution-list">
+      <li>必ず <strong>Ethereumメインネット</strong> で送金してください。BSC・Polygon等からの送金は反映されません。</li>
+      <li>最小送金額: <strong>0.001 ETH</strong></li>
+      <li>着金確認には <strong>数分〜15分程度</strong> かかります。</li>
+      <li>送金先アドレスを必ずご確認ください。誤送金は復元できません。</li>
+    </ul>
+  </div>
+</div>
+
+</div>
+<script>
+function $(id){return document.getElementById(id)}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},2400)}
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on')});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on')});
+    t.classList.add('on');
+    $('panel-'+t.dataset.coin).classList.add('on');
+  });
+});
+
+// Copy buttons
+function setupCopy(btnId,addrId){
+  $(btnId).addEventListener('click',function(){
+    var addr=$(addrId).textContent.trim();
+    navigator.clipboard.writeText(addr).then(function(){
+      $(btnId).classList.add('ok');
+      $(btnId).innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      toast('アドレスをコピーしました');
+      setTimeout(function(){
+        $(btnId).classList.remove('ok');
+        $(btnId).innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+      },2000);
+    });
+  });
+}
+setupCopy('copyBtc','addrBtc');
+setupCopy('copyEth','addrEth');
+</script>
+</body>
+</html>
