@@ -1,5 +1,5 @@
 {
-  "name": "novalink-investor",
+  "name": "novalink-investor-01",
   "main": "dist/worker.js",
   "compatibility_date": "2024-12-01",
   "kv_namespaces": [
