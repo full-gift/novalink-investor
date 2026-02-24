@@ -11,11 +11,45 @@ const DEPOSIT_HTML = "__DEPOSIT_HTML__";
 const COMMENTS_HTML = "__COMMENTS_HTML__";
 const SW_JS = `self.addEventListener('push',function(e){var data=e.data?e.data.json():{};e.waitUntil(self.registration.showNotification(data.title||'NovaLink',{body:data.body||'',icon:data.icon||'/favicon.ico',tag:data.tag||'default',badge:data.icon||'/favicon.ico'}))});self.addEventListener('notificationclick',function(e){e.notification.close();e.waitUntil(clients.openWindow('/'))});`;
 
+const MANIFEST = JSON.stringify({
+  name: "NovaLink",
+  short_name: "NovaLink",
+  description: "NovaLink Investment Platform",
+  start_url: "/",
+  display: "standalone",
+  background_color: "#09090B",
+  theme_color: "#C5963A",
+  icons: [
+    { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    { src: "/icon-512.png", sizes: "512x512", type: "image/png" }
+  ]
+});
+
+function generateIcon(size) {
+  const s = size;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+    <rect width="${s}" height="${s}" rx="${Math.round(s*0.2)}" fill="#09090B"/>
+    <text x="50%" y="54%" font-family="sans-serif" font-size="${Math.round(s*0.45)}" font-weight="800" fill="#C5963A" text-anchor="middle" dominant-baseline="middle">N</text>
+  </svg>`;
+  return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=31536000' } });
+}
+
+function generateFavicon() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <rect width="32" height="32" rx="6" fill="#09090B"/>
+    <text x="50%" y="54%" font-family="sans-serif" font-size="18" font-weight="800" fill="#C5963A" text-anchor="middle" dominant-baseline="middle">N</text>
+  </svg>`;
+  return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=31536000' } });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
     if (path === '/sw.js') return new Response(SW_JS, { headers: { 'Content-Type': 'application/javascript; charset=utf-8' } });
+    if (path === '/manifest.json') return new Response(MANIFEST, { headers: { 'Content-Type': 'application/json' } });
+    if (path === '/icon-192.png' || path === '/icon-512.png') return generateIcon(path.includes('192') ? 192 : 512);
+    if (path === '/favicon.ico' || path === '/favicon.svg') return generateFavicon();
     if (path.startsWith('/api/')) return handleAPI(path, request, env, url);
     if (path === '/admin' || path === '/admin/') return new Response(ADMIN_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (path === '/ranking' || path === '/ranking/') return new Response(RANKING_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
