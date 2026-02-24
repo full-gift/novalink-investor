@@ -5,7 +5,10 @@
   "kv_namespaces": [
     {
       "binding": "INVESTOR_KV",
-      "id": "875830474cf74268862ab76e05500714"
+      "id": "placeholder-id"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": ["0 8 * * *", "0 10 * * *"]
+  }
 }
