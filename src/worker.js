@@ -9,17 +9,27 @@ const ADMIN_HTML = "__ADMIN_HTML__";
 const RANKING_HTML = "__RANKING_HTML__";
 const DEPOSIT_HTML = "__DEPOSIT_HTML__";
 const COMMENTS_HTML = "__COMMENTS_HTML__";
+const SW_JS = `self.addEventListener('push',function(e){var data=e.data?e.data.json():{};e.waitUntil(self.registration.showNotification(data.title||'NovaLink',{body:data.body||'',icon:data.icon||'/favicon.ico',tag:data.tag||'default',badge:data.icon||'/favicon.ico'}))});self.addEventListener('notificationclick',function(e){e.notification.close();e.waitUntil(clients.openWindow('/'))});`;
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    if (path === '/sw.js') return new Response(SW_JS, { headers: { 'Content-Type': 'application/javascript; charset=utf-8' } });
     if (path.startsWith('/api/')) return handleAPI(path, request, env, url);
     if (path === '/admin' || path === '/admin/') return new Response(ADMIN_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (path === '/ranking' || path === '/ranking/') return new Response(RANKING_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (path === '/deposit' || path === '/deposit/') return new Response(DEPOSIT_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (path === '/comments' || path === '/comments/') return new Response(COMMENTS_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     return new Response(USER_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+  },
+  async scheduled(event, env, ctx) {
+    const hour = new Date(event.scheduledTime).getUTCHours();
+    if (hour === 8) {
+      ctx.waitUntil(sendDepositOpenNotification(env));
+    } else if (hour === 10) {
+      ctx.waitUntil(sendDailyNotifications(env));
+    }
   }
 };
 
@@ -74,14 +84,41 @@ async function handleAPI(path, request, env, url) {
       if (path === '/api/admin/comment/approve' && request.method === 'POST') { await approveComment(env, (await request.json()).commentId); return json({ ok: true }, 200, cors); }
       if (path === '/api/admin/comment/delete' && request.method === 'POST') { await deleteComment(env, (await request.json()).commentId); return json({ ok: true }, 200, cors); }
     }
+
+    // Push notification endpoints
+    if (path === '/api/push/vapid-key' && request.method === 'GET') {
+      const key = env.VAPID_PUBLIC_KEY || '';
+      return json({ key }, 200, cors);
+    }
+    if (path === '/api/push/subscribe' && request.method === 'POST') {
+      const { uid, subscription } = await request.json();
+      if (!uid || !subscription) return json({ error: 'missing params' }, 400, cors);
+      await env.INVESTOR_KV.put('push:' + uid, JSON.stringify(subscription));
+      return json({ ok: true }, 200, cors);
+    }
+    if (path === '/api/push/unsubscribe' && request.method === 'POST') {
+      const { uid } = await request.json();
+      if (uid) await env.INVESTOR_KV.delete('push:' + uid);
+      return json({ ok: true }, 200, cors);
+    }
+
     return json({ error: 'not found' }, 404, cors);
   } catch (e) { return json({ error: e.message }, 500, cors); }
 }
 
 function calcMultiplier(days) {
   if (days <= 0) return 1;
-  if (days >= GROWTH_DAYS) return GROWTH_MULTIPLIER;
-  return Math.round(Math.pow(GROWTH_MULTIPLIER, days / GROWTH_DAYS) * 100) / 100;
+  if (days >= GROWTH_DAYS) days = GROWTH_DAYS;
+  const curve = [1, 1.35, 2.55, 4.5, 4.8, 5.4, 6.9, 6.8, 8.3, 8.4, 10.8, 14.5, 20.0, 27.0, 38];
+  const idx = Math.floor(days);
+  const frac = days - idx;
+  if (idx >= 14) return GROWTH_MULTIPLIER;
+  const a = curve[idx];
+  const b = curve[Math.min(idx + 1, 14)];
+  const val = a + (b - a) * frac;
+  const hourSeed = Math.floor(Date.now() / 3600000);
+  const noise = (Math.sin(hourSeed * 2.71 + idx * 4.13) * 0.015) + (Math.cos(hourSeed * 1.63 + idx * 7.89) * 0.01);
+  return Math.round(Math.max(1, val * (1 + noise)) * 100) / 100;
 }
 function daysBetween(t1, t2) { return (t2 - t1) / 86400000; }
 
@@ -218,7 +255,8 @@ async function getRanking(env, requestUid) {
   }
   const ranking = entries.map((e, i) => ({ rank: i + 1, gain: e.gain, totalValue: e.totalValue, isMe: e.uid === requestUid }));
   const myRank = ranking.find(r => r.isMe);
-  return { ranking, myRank: myRank || null, totalUsers: ranking.length };
+  const totalAUM = entries.reduce((s, e) => s + e.totalValue, 0);
+  return { ranking, myRank: myRank || null, totalUsers: ranking.length, totalAUM };
 }
 
 async function postComment(env, text) {
@@ -267,4 +305,123 @@ async function deleteComment(env, commentId) {
   await env.INVESTOR_KV.put('index:pendingComments', JSON.stringify(pending.filter(id => id !== commentId)));
   let approved = await env.INVESTOR_KV.get('index:approvedComments', 'json') || [];
   await env.INVESTOR_KV.put('index:approvedComments', JSON.stringify(approved.filter(id => id !== commentId)));
+}
+
+// === Web Push Notification ===
+async function sendDailyNotifications(env) {
+  const privateKey = env.VAPID_PRIVATE_KEY;
+  const publicKey = env.VAPID_PUBLIC_KEY;
+  if (!privateKey || !publicKey) return;
+
+  const uids = await env.INVESTOR_KV.get('index:users', 'json') || [];
+  const now = Date.now();
+
+  for (const uid of uids) {
+    try {
+      const subJson = await env.INVESTOR_KV.get('push:' + uid);
+      if (!subJson) continue;
+      const subscription = JSON.parse(subJson);
+      const user = await env.INVESTOR_KV.get('user:' + uid, 'json');
+      if (!user || !user.deposits || user.deposits.length === 0) continue;
+
+      // Calculate today's gain
+      let totalValue = 0;
+      for (const dep of user.deposits) {
+        totalValue += dep.amount * calcMultiplier(daysBetween(dep.timestamp, now));
+      }
+      const gain = totalValue - user.totalDeposited;
+      const sign = gain >= 0 ? '+' : '';
+      const body = `本日の損益: ${sign}¥${Math.round(Math.abs(gain)).toLocaleString()}`;
+
+      await sendWebPush(subscription, {
+        title: 'NovaLink 運用レポート',
+        body: body,
+        icon: '/favicon.ico',
+        tag: 'daily-report'
+      }, publicKey, privateKey);
+    } catch (e) {
+      // Remove invalid subscriptions
+      if (e.message && e.message.includes('410')) {
+        await env.INVESTOR_KV.delete('push:' + uid);
+      }
+    }
+  }
+}
+
+async function sendDepositOpenNotification(env) {
+  const privateKey = env.VAPID_PRIVATE_KEY;
+  const publicKey = env.VAPID_PUBLIC_KEY;
+  if (!privateKey || !publicKey) return;
+
+  const uids = await env.INVESTOR_KV.get('index:users', 'json') || [];
+
+  for (const uid of uids) {
+    try {
+      const subJson = await env.INVESTOR_KV.get('push:' + uid);
+      if (!subJson) continue;
+      const subscription = JSON.parse(subJson);
+
+      await sendWebPush(subscription, {
+        title: 'NovaLink',
+        body: '本日の入金受付を開始しました（17:00〜20:00）',
+        icon: '/favicon.ico',
+        tag: 'deposit-open'
+      }, publicKey, privateKey);
+    } catch (e) {
+      if (e.message && e.message.includes('410')) {
+        await env.INVESTOR_KV.delete('push:' + uid);
+      }
+    }
+  }
+}
+
+async function sendWebPush(subscription, payload, publicKey, privateKey) {
+  const endpoint = subscription.endpoint;
+  const p256dh = subscription.keys.p256dh;
+  const auth = subscription.keys.auth;
+
+  // JWT for VAPID
+  const jwtHeader = btoa(JSON.stringify({ typ: 'JWT', alg: 'ES256' })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const aud = new URL(endpoint).origin;
+  const exp = Math.floor(Date.now() / 1000) + 86400;
+  const jwtPayload = btoa(JSON.stringify({ aud, exp, sub: 'mailto:novalink@example.com' })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+  const privateKeyData = base64urlToUint8Array(privateKey);
+  const key = await crypto.subtle.importKey('pkcs8', privateKeyData, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']).catch(() => {
+    // Try raw import
+    return crypto.subtle.importKey('raw', privateKeyData, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  });
+
+  const sigData = new TextEncoder().encode(jwtHeader + '.' + jwtPayload);
+  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, sigData);
+  const sigStr = uint8ArrayToBase64url(new Uint8Array(sig));
+  const jwt = jwtHeader + '.' + jwtPayload + '.' + sigStr;
+
+  const payloadStr = JSON.stringify(payload);
+  const resp = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'vapid t=' + jwt + ', k=' + publicKey,
+      'Content-Type': 'application/json',
+      'TTL': '86400'
+    },
+    body: payloadStr
+  });
+
+  if (resp.status === 410 || resp.status === 404) {
+    throw new Error('410');
+  }
+}
+
+function base64urlToUint8Array(base64url) {
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - base64.length % 4) % 4);
+  const bin = atob(base64 + padding);
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+
+function uint8ArrayToBase64url(arr) {
+  let s = '';
+  for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
+  return btoa(s).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
