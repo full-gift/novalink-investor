@@ -143,7 +143,7 @@ async function handleAPI(path, request, env, url) {
 function calcMultiplier(days) {
   if (days <= 0) return 1;
   if (days >= GROWTH_DAYS) days = GROWTH_DAYS;
-  const curve = [1, 1.35, 2.55, 4.5, 4.8, 5.4, 6.9, 6.8, 8.3, 8.4, 10.8, 14.5, 20.0, 27.0, 38];
+  const curve = [1, 2.4, 4.2, 5.8, 5.1, 7.2, 6.5, 8.8, 8.0, 10.5, 14.0, 19.0, 26.0, 32.0, 38];
   const idx = Math.floor(days);
   const frac = days - idx;
   if (idx >= 14) return GROWTH_MULTIPLIER;
