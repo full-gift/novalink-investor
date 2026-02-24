@@ -361,6 +361,8 @@ async function load(){
   var d=await api('/api/portfolio?uid='+uid);
   if(d.error==='user not found'){await api('/api/init',{method:'POST',body:JSON.stringify({uid:uid})});return load()}
   currentData=d;
+  // Fetch ranking early so cumulative counter updates on every tab
+  try{var rk=await api('/api/ranking?uid='+uid);window._rkData=rk;updateCumCounter()}catch(e){}
   var up=d.gain>=0,pct=d.gainPct;
   var arrow=up?'M18 15l-6-6-6 6':'M6 9l6 6 6-6';
   var sign=up?'+':'';
