@@ -1,14 +1,5 @@
 {
-  "name": "novalink-investor",
+  "name": "novalink-investor-01",
   "main": "dist/worker.js",
-  "compatibility_date": "2024-12-01",
-  "kv_namespaces": [
-    {
-      "binding": "INVESTOR_KV",
-      "id": "875830474cf74268862ab76e05500714"
-    }
-  ],
-  "triggers": {
-    "crons": ["0 8 * * *", "0 10 * * *"]
-  }
+  "compatibility_date": "2024-01-01"
 }

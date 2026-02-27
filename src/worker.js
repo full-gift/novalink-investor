@@ -179,7 +179,7 @@ async function getPortfolio(env, uid) {
   const gainPct = user.totalDeposited > 0 ? Math.round((gain / user.totalDeposited) * 1000) / 10 : 0;
   const overallDays = daysBetween(user.createdAt, now);
   const hasPendingWithdraw = await hasPendingWithdrawal(env, uid);
-  return { uid: user.uid, totalValue, totalDeposited: user.totalDeposited, gain, gainPct, currentMultiplier: calcMultiplier(overallDays), daysSinceStart: Math.floor(overallDays), orders: await getOrdersForUser(env, uid), withdrawn: user.withdrawn || 0, hasPendingWithdraw };
+  return { uid: user.uid, totalValue, totalDeposited: user.totalDeposited, gain, gainPct, currentMultiplier: calcMultiplier(overallDays), daysSinceStart: Math.round(overallDays * 1000) / 1000, orders: await getOrdersForUser(env, uid), withdrawn: user.withdrawn || 0, hasPendingWithdraw };
 }
 
 async function hasPendingWithdrawal(env, uid) {
