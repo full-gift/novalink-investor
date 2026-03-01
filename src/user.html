@@ -374,7 +374,7 @@ async function load(){
   h+='<div class="m-card"><div class="m-label">\u542b\u307f\u76ca</div><div class="m-val" style="color:'+gainColor+'">'+fY(Math.abs(d.gain))+'</div><div class="m-note">'+sign+pct+'%</div></div></div>';
   h+='<div class="info-card" id="saleBanner"><div class="info-top"><div class="sale-icon" id="saleIcon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="sale-info"><div class="sale-title" id="saleTitle">\u5165\u91d1\u53d7\u4ed8\u4e2d</div><div class="sale-timer" id="saleTimer">--:--:--</div><div class="sale-label" id="saleLabel">\u53d7\u4ed8\u7d42\u4e86\u307e\u3067</div></div></div></div>';
   
-  h+='<div class="chart-wrap"><div class="chart-card"><div class="chart-hdr"><div><div class="chart-pair"><span class="chart-pair-dot"></span>Portfolio Performance</div></div></div><div class="tf-tabs"><button class="tf on" data-tf="5m">5m</button><button class="tf" data-tf="15m">15m</button><button class="tf" data-tf="4h">4h</button></div><canvas class="chart-canvas" id="chartCanvas"></canvas><div class="chart-foot"><span id="chartRange">-</span><span id="chartVol">-</span></div></div></div>';
+  h+='<div class="chart-wrap"><div class="chart-card"><div class="chart-hdr"><div><div class="chart-pair"><span class="chart-pair-dot"></span>Portfolio Performance</div></div></div><div class="tf-tabs"><button class="tf'+(chartTF==='5m'?' on':'')+'" data-tf="5m">5m</button><button class="tf'+(chartTF==='15m'?' on':'')+'" data-tf="15m">15m</button><button class="tf'+(chartTF==='4h'?' on':'')+'" data-tf="4h">4h</button></div><canvas class="chart-canvas" id="chartCanvas"></canvas><div class="chart-foot"><span id="chartRange">-</span><span id="chartVol">-</span></div></div></div>';
   h+='<div class="notif-bar'+(window._pushEnabled?' on':'')+'" id="notifBar" onclick="togglePush()"><svg class="notif-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-text">'+(window._pushEnabled?'\u6bce\u65e517:00\u30fb19:00\u306b\u901a\u77e5':'\u6bce\u65e5\u306e\u901a\u77e5\u3092\u30d7\u30c3\u30b7\u30e5\u3067\u53d7\u3051\u53d6\u308b')+'</div><div class="notif-toggle">'+(window._pushEnabled?'ON':'OFF')+'</div></div>';
 
   if(d.totalValue>0){
@@ -593,9 +593,8 @@ ctx.fillText(Math.round(last.c).toLocaleString(),w-pad.r+2+tw/2,ly+3);
 var re=document.getElementById('chartRange');if(re)re.textContent='H: \u00a5'+Math.round(maxP).toLocaleString()+' / L: \u00a5'+Math.round(minP).toLocaleString();
 var ve=document.getElementById('chartVol');if(ve)ve.textContent=candles.length+' candles'}
 function bindChart(){
-if(!window._chartBound){window._chartBound=true;
 var tabs=document.querySelectorAll('.tf');tabs.forEach(function(b){b.addEventListener('click',function(){
-tabs.forEach(function(t){t.classList.remove('on')});this.classList.add('on');chartTF=this.getAttribute('data-tf');drawChart()})});}
+tabs.forEach(function(t){t.classList.remove('on')});this.classList.add('on');chartTF=this.getAttribute('data-tf');drawChart()})});
 drawChart();
 if(window._chartTick)clearInterval(window._chartTick);
 window._chartTick=setInterval(function(){if(document.getElementById('chartCanvas'))drawChart()},3000)}
